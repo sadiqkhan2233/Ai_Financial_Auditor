@@ -68,6 +68,16 @@ class Transaction(Base):
     debit: Mapped[float] = mapped_column(Float, default=0.0)
     credit: Mapped[float] = mapped_column(Float, default=0.0)
 
+class TrialBalanceLine(Base):
+    __tablename__ = "trial_balance_lines"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    engagement_id: Mapped[int] = mapped_column(ForeignKey("engagements.id"))
+    document_id: Mapped[int | None] = mapped_column(ForeignKey("documents.id"), nullable=True)
+    account_code: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    account_name: Mapped[str] = mapped_column(String(200))
+    debit: Mapped[float] = mapped_column(Float, default=0.0)
+    credit: Mapped[float] = mapped_column(Float, default=0.0)
+
 
 class Finding(Base):
     __tablename__ = "findings"
