@@ -1,4 +1,3 @@
-
 import sys
 from pathlib import Path
 
@@ -11,6 +10,8 @@ from models.database import (
     AuditLog, Company, Engagement, Finding, get_session, init_db, log_activity,
 )
 from services.llm_service import LLMError, LLMService
+from ui.financial_analysis import show_financial_analysis
+from ui.transaction_testing import show_transaction_testing
 from ui.upload_center import show_upload_center
 
 st.set_page_config(page_title="FinAudit AI", page_icon="📊", layout="wide")
@@ -96,6 +97,10 @@ if page == "Dashboard":
     show_dashboard()
 elif page == "Document Upload Center":
     show_upload_center()
+elif page == "Financial Analysis":
+    show_financial_analysis()
+elif page == "Transaction Testing":
+    show_transaction_testing()
 elif page == "Settings":
     show_settings()
 else:
