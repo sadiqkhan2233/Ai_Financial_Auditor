@@ -1,4 +1,4 @@
-import sys
+ from ui.upload_center import show_upload_center import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -92,6 +92,8 @@ st.sidebar.caption("Audit support tool. It does not replace a qualified auditor.
 
 if page == "Dashboard":
     show_dashboard()
+elif page == "Document Upload Center":
+    show_upload_center()
 elif page == "Settings":
     show_settings()
 else:
