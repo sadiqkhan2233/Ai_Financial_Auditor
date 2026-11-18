@@ -1,4 +1,5 @@
- from ui.upload_center import show_upload_center import sys
+
+import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -10,6 +11,7 @@ from models.database import (
     AuditLog, Company, Engagement, Finding, get_session, init_db, log_activity,
 )
 from services.llm_service import LLMError, LLMService
+from ui.upload_center import show_upload_center
 
 st.set_page_config(page_title="FinAudit AI", page_icon="📊", layout="wide")
 
