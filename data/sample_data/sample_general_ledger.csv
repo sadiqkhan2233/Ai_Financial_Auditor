@@ -1,0 +1,25 @@
+date,reference,description,account,vendor,debit,credit
+2025-07-02,INV-1001,Raw material purchase,Inventory,Karim Traders,1250000,0
+2025-07-04,PAY-2001,Supplier payment,Accounts Payable,Karim Traders,1250000,0
+2025-07-07,PRL-0701,July salaries,Salaries and Wages,Payroll,400000,0
+2025-07-10,RNT-0701,Office rent July,Rent Expense,Bilal Properties,100000,0
+2025-07-15,UTL-3001,Electricity bill,Utilities Expense,PESCO,54200,0
+2025-07-18,SLS-1001,Sale to customer,Sales Revenue,Hamza Enterprises,0,3500000
+2025-08-05,PRL-0801,August salaries,Salaries and Wages,Payroll,400000,0
+2025-08-09,RNT-0801,Office rent August,Rent Expense,Bilal Properties,100000,0
+2025-08-12,PAY-2002,Supplier payment,Accounts Payable,Noor Packaging,875000,0
+2025-08-12,PAY-2002,Supplier payment,Accounts Payable,Noor Packaging,875000,0
+2025-08-20,UTL-3002,Electricity bill,Utilities Expense,PESCO,61800,0
+2025-09-03,INV-1004,Raw material purchase,Inventory,Karim Traders,1480000,0
+2025-09-05,PRL-0901,September salaries,Salaries and Wages,Payroll,400000,0
+2025-09-11,PAY-2003,Supplier payment,Accounts Payable,Karim Traders,1480000,0
+2025-09-14,,Consulting fee,Professional Fees,Zafar and Co,500000,0
+2025-09-28,SLS-1002,Sale to customer,Sales Revenue,Ali Brothers,0,4200000
+2025-10-04,PRL-1001,October salaries,Salaries and Wages,Payroll,400000,0
+2025-10-11,INV-1005,Urgent purchase,Inventory,Rizwan Supplies,990000,0
+2025-11-05,PRL-1101,November salaries,Salaries and Wages,Payroll,400000,0
+2025-11-17,JV-5001,Year-end adjustment,Miscellaneous Expense,,4950000,0
+2025-12-05,PRL-1201,December salaries,Salaries and Wages,Payroll,400000,0
+2026-01-14,UTL-3003,Electricity bill,Utilities Expense,PESCO,58900,0
+2026-02-20,SLS-1003,Sale to customer,Sales Revenue,Hamza Enterprises,0,5100000
+2026-03-31,PAY-2004,Supplier payment,Accounts Payable,Noor Packaging,640000,0
