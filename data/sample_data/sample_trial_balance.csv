@@ -1,0 +1,18 @@
+account_code,account_name,debit,credit
+1000,Cash at Bank,4250000,0
+1100,Accounts Receivable,6800000,0
+1200,Inventory,9500000,0
+1500,Property Plant and Equipment,18000000,0
+1590,Accumulated Depreciation,0,5200000
+2000,Accounts Payable,0,5600000
+2100,Short-term Borrowings,0,4000000
+2500,Long-term Loan,0,6000000
+3000,Share Capital,0,10000000
+3100,Retained Earnings,0,4500000
+4000,Sales Revenue,0,42000000
+5000,Cost of Goods Sold,29400000,0
+6000,Salaries and Wages,4800000,0
+6100,Rent Expense,1200000,0
+6200,Utilities Expense,650000,0
+6300,Depreciation Expense,1800000,0
+6400,Finance Cost,900000,0
