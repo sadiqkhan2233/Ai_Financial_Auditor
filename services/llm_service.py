@@ -12,6 +12,16 @@ class LLMError(Exception):
     """A friendly error we can show to the user."""
 
 
+def _detail(err) -> str:
+    """Pulls Groq's own explanation out of an error."""
+    body = getattr(err, "body", None)
+    if isinstance(body, dict):
+        inner = body.get("error", body)
+        if isinstance(inner, dict) and inner.get("message"):
+            return str(inner["message"])[:300]
+    return str(getattr(err, "message", err))[:300]
+
+
 class LLMService:
     def __init__(self, api_key=None, model=None, max_retries=4):
         settings = get_settings()
@@ -52,7 +62,7 @@ class LLMService:
                     ) from err
                 if err.status_code in (401, 403):
                     raise LLMError("Groq rejected the API key. Please check it.") from err
-                raise LLMError(f"Groq returned an error ({err.status_code}).") from err
+                raise LLMError(f"Groq returned an error ({err.status_code}): {_detail(err)}") from err
         raise LLMError("Unexpected error while contacting Groq.")
 
     def ask(self, prompt: str, system: str | None = None) -> str:
