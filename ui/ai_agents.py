@@ -6,21 +6,10 @@ from config.settings import get_settings
 from services.knowledge_base import list_sources
 from ui.agent_state import current_answers, outputs_for, render_result, run_and_store
 from ui.common import pick_engagement
+from ui.flow_panel import show_flow_panel
 
 
-def show_ai_agents():
-    st.title("🤖 AI Audit Assistant: the eight agents")
-    st.caption("Each agent only reads numbered facts that the app calculated. They explain; they never calculate. "
-               "Run them one at a time. Phase 5 will chain them automatically.")
-    st.warning("AI answers are drafts for a qualified auditor to review. They are not an audit opinion.")
-
-    if not get_settings().groq_api_key:
-        st.error("The Groq API key is missing. Add it in Streamlit Secrets.")
-        return
-    engagement_id = pick_engagement()
-    if engagement_id is None:
-        return
-
+def _single_agent_tab(engagement_id):
     outputs = outputs_for(engagement_id)
     pack = build_fact_pack(engagement_id, current_answers(engagement_id))
 
@@ -55,3 +44,23 @@ def show_ai_agents():
         for k in ORDER
     ], hide_index=True)
     st.caption("Results are kept while this browser session is open. Saving them permanently comes in Phase 7.")
+
+
+def show_ai_agents():
+    st.title("🤖 AI Audit Assistant: the eight agents")
+    st.caption("Each agent only reads numbered facts that the app calculated. They explain; they never calculate.")
+    st.warning("AI answers are drafts for a qualified auditor to review. They are not an audit opinion.")
+
+    if not get_settings().groq_api_key:
+        st.error("The Groq API key is missing. Add it in Streamlit Secrets.")
+        return
+    engagement_id = pick_engagement()
+    if engagement_id is None:
+        return
+
+    tab_flow, tab_single = st.tabs(["▶ Run full audit analysis", "Run one agent"])
+    # The single-agent tab is drawn first because the full-run panel refreshes itself while it works.
+    with tab_single:
+        _single_agent_tab(engagement_id)
+    with tab_flow:
+        show_flow_panel(engagement_id)
