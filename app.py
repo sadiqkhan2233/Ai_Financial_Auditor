@@ -10,7 +10,9 @@ from models.database import (
     AuditLog, Company, Engagement, Finding, get_session, init_db, log_activity,
 )
 from services.llm_service import LLMError, LLMService
+from ui.ai_agents import show_ai_agents
 from ui.financial_analysis import show_financial_analysis
+from ui.internal_control import show_internal_control
 from ui.transaction_testing import show_transaction_testing
 from ui.upload_center import show_upload_center
 
@@ -24,7 +26,7 @@ COMING_LATER = {
     "Transaction Testing": "Phase 3",
     "Internal Control Assessment": "Phase 4",
     "Audit Risk Dashboard": "Phase 6",
-    "AI Audit Assistant": "Phase 5",
+    "AI Audit Assistant": "Phase 4",
     "Audit Findings": "Phase 7",
     "Reports & Downloads": "Phase 7",
 }
@@ -101,6 +103,10 @@ elif page == "Financial Analysis":
     show_financial_analysis()
 elif page == "Transaction Testing":
     show_transaction_testing()
+elif page == "Internal Control Assessment":
+    show_internal_control()
+elif page == "AI Audit Assistant":
+    show_ai_agents()
 elif page == "Settings":
     show_settings()
 else:
