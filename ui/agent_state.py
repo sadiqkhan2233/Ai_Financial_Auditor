@@ -2,13 +2,36 @@ import streamlit as st
 
 from models.database import log_activity
 from services.control_questionnaire import collect_answers
+from services.results_store import load_agent_results, save_agent_result
 
 ICONS = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}
 
 
+class _PersistentOutputs(dict):
+    """A dictionary of agent results that saves every new result to the database."""
+
+    def __init__(self, engagement_id):
+        super().__init__()
+        self.engagement_id = engagement_id
+        try:
+            for key, value in load_agent_results(engagement_id).items():
+                dict.__setitem__(self, key, value)
+        except Exception:
+            pass  # a database problem should not stop the page from loading
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        try:
+            save_agent_result(self.engagement_id, key, value)
+        except Exception:
+            pass
+
+
 def outputs_for(engagement_id) -> dict:
     store = st.session_state.setdefault("agent_outputs", {})
-    return store.setdefault(engagement_id, {})
+    if not isinstance(store.get(engagement_id), _PersistentOutputs):
+        store[engagement_id] = _PersistentOutputs(engagement_id)
+    return store[engagement_id]
 
 
 def current_answers(engagement_id) -> dict:
@@ -35,7 +58,8 @@ def run_and_store(engagement_id, agent_key):
     except Exception as err:
         return False, f"Unexpected error: {err}"
     outputs[agent_key] = result
-    log_activity("agent_run", f"{agent_key} on engagement {engagement_id}")
+    log_activity("agent_run", f"{agent_key} on engagement {engagement_id}",
+                 username=st.session_state.get("user_name") or "system")
     return True, ""
 
 
@@ -58,7 +82,8 @@ def report_to_markdown(r: dict) -> str:
 
 def render_result(agent_key: str, result: dict):
     out = result["output"]
-    st.caption(f"Finished in {result.get('seconds', '?')} seconds.")
+    saved = f" Saved {result['saved_at']}." if result.get("saved_at") else ""
+    st.caption(f"Finished in {result.get('seconds', '?')} seconds.{saved}")
 
     if agent_key == "reporting":
         st.subheader(out["title"])
