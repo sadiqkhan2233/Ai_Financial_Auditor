@@ -8,8 +8,12 @@ import streamlit as st
 from config.settings import get_settings
 from models.database import init_db
 from ui.ai_agents import show_ai_agents
+from ui.company_page import show_company_management
 from ui.dashboard import show_dashboard
+from ui.engagement_page import show_engagements
 from ui.financial_analysis import show_financial_analysis
+from ui.findings_page import show_findings_page
+from ui.identity import show_identity_sidebar
 from ui.internal_control import show_internal_control
 from ui.risk_dashboard import show_risk_dashboard
 from ui.transaction_testing import show_transaction_testing
@@ -17,23 +21,15 @@ from ui.upload_center import show_upload_center
 
 st.set_page_config(page_title="FinAudit AI", page_icon="📊", layout="wide")
 
-COMING_LATER = {
-    "Company Management": "Phase 7",
-    "Audit Engagements": "Phase 7",
-    "Document Upload Center": "Phase 2",
-    "Financial Analysis": "Phase 3",
-    "Transaction Testing": "Phase 3",
-    "Internal Control Assessment": "Phase 4",
-    "Audit Risk Dashboard": "Phase 6",
-    "AI Audit Assistant": "Phase 6",
-    "Audit Findings": "Phase 7",
-    "Reports & Downloads": "Phase 7",
-}
-PAGES = ["Dashboard"] + list(COMING_LATER) + ["Settings"]
+PAGES = [
+    "Dashboard", "Company Management", "Audit Engagements", "Document Upload Center",
+    "Financial Analysis", "Transaction Testing", "Internal Control Assessment",
+    "Audit Risk Dashboard", "AI Audit Assistant", "Audit Findings", "Reports & Downloads", "Settings",
+]
 
 
 @st.cache_resource
-def setup_database():
+def setup_database(version: str = "phase7a"):
     init_db()
     return True
 
@@ -52,13 +48,18 @@ def show_settings():
     st.info("To change the model or key, edit them in Streamlit Cloud → App settings → Secrets.")
 
 
-setup_database()
+setup_database("phase7a")
 st.sidebar.title("FinAudit AI")
 page = st.sidebar.radio("Navigation", PAGES)
 st.sidebar.caption("Audit support tool. It does not replace a qualified auditor.")
+show_identity_sidebar()
 
 if page == "Dashboard":
     show_dashboard()
+elif page == "Company Management":
+    show_company_management()
+elif page == "Audit Engagements":
+    show_engagements()
 elif page == "Document Upload Center":
     show_upload_center()
 elif page == "Financial Analysis":
@@ -71,8 +72,10 @@ elif page == "Audit Risk Dashboard":
     show_risk_dashboard()
 elif page == "AI Audit Assistant":
     show_ai_agents()
+elif page == "Audit Findings":
+    show_findings_page()
 elif page == "Settings":
     show_settings()
 else:
     st.title(page)
-    st.info(f"This page will be built in **{COMING_LATER[page]}**.")
+    st.info("This page will be built in **Phase 7, part B** (PDF and Excel reports with approval).")
