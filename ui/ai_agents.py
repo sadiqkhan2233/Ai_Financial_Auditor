@@ -5,6 +5,7 @@ from agents.specs import AGENT_SPECS, ORDER
 from config.settings import get_settings
 from services.knowledge_base import list_sources
 from ui.agent_state import current_answers, outputs_for, render_result, run_and_store
+from ui.chat_panel import show_chat_panel
 from ui.common import pick_engagement
 from ui.flow_panel import show_flow_panel
 
@@ -47,8 +48,8 @@ def _single_agent_tab(engagement_id):
 
 
 def show_ai_agents():
-    st.title("🤖 AI Audit Assistant: the eight agents")
-    st.caption("Each agent only reads numbered facts that the app calculated. They explain; they never calculate.")
+    st.title("🤖 AI Audit Assistant")
+    st.caption("The AI only reads numbered facts that the app calculated. It explains; it never calculates.")
     st.warning("AI answers are drafts for a qualified auditor to review. They are not an audit opinion.")
 
     if not get_settings().groq_api_key:
@@ -58,9 +59,13 @@ def show_ai_agents():
     if engagement_id is None:
         return
 
-    tab_flow, tab_single = st.tabs(["▶ Run full audit analysis", "Run one agent"])
-    # The single-agent tab is drawn first because the full-run panel refreshes itself while it works.
+    tab_flow, tab_chat, tab_single = st.tabs(
+        ["▶ Run full audit analysis", "💬 Ask questions", "Run one agent"]
+    )
+    # The full-run panel refreshes itself while it works, so it is drawn last.
     with tab_single:
         _single_agent_tab(engagement_id)
+    with tab_chat:
+        show_chat_panel(engagement_id)
     with tab_flow:
         show_flow_panel(engagement_id)
