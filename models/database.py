@@ -20,7 +20,7 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(80), unique=True)
-    role: Mapped[str] = mapped_column(String(30), default="auditor")  # Auditor / Reviewer / Admin
+    role: Mapped[str] = mapped_column(String(30), default="auditor")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
@@ -105,6 +105,12 @@ class Report(Base):
     status: Mapped[str] = mapped_column(String(30), default="Draft")
     approved_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    version: Mapped[int] = mapped_column(default=1)
+    prepared_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    snapshot_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decided_by: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class AgentResult(Base):
@@ -130,6 +136,10 @@ class AuditLog(Base):
 # Columns added after the first release. They are added to an existing SQLite file automatically.
 MIGRATIONS = {
     "findings": {"review_comment": "TEXT", "reviewed_at": "DATETIME"},
+    "reports": {
+        "version": "INTEGER DEFAULT 1", "prepared_by": "VARCHAR(80)", "snapshot_json": "TEXT",
+        "decision_comment": "TEXT", "decided_by": "VARCHAR(80)", "decided_at": "DATETIME",
+    },
 }
 
 
@@ -142,6 +152,15 @@ def _make_engine(url: str):
 
 def get_engine(url: str | None = None):
     return _make_engine(url or get_settings().database_url)
+
+
+def reset_engines() -> None:
+    """Closes database connections. Used before and after restoring a backup file."""
+    try:
+        get_engine().dispose()
+    except Exception:
+        pass
+    _make_engine.cache_clear()
 
 
 def _migrate(engine) -> None:
