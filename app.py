@@ -6,13 +6,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import streamlit as st
 
 from config.settings import get_settings
-from models.database import (
-    AuditLog, Company, Engagement, Finding, get_session, init_db, log_activity,
-)
-from services.llm_service import LLMError, LLMService
+from models.database import init_db
 from ui.ai_agents import show_ai_agents
+from ui.dashboard import show_dashboard
 from ui.financial_analysis import show_financial_analysis
 from ui.internal_control import show_internal_control
+from ui.risk_dashboard import show_risk_dashboard
 from ui.transaction_testing import show_transaction_testing
 from ui.upload_center import show_upload_center
 
@@ -26,7 +25,7 @@ COMING_LATER = {
     "Transaction Testing": "Phase 3",
     "Internal Control Assessment": "Phase 4",
     "Audit Risk Dashboard": "Phase 6",
-    "AI Audit Assistant": "Phase 4",
+    "AI Audit Assistant": "Phase 6",
     "Audit Findings": "Phase 7",
     "Reports & Downloads": "Phase 7",
 }
@@ -37,43 +36,6 @@ PAGES = ["Dashboard"] + list(COMING_LATER) + ["Settings"]
 def setup_database():
     init_db()
     return True
-
-
-def show_dashboard():
-    st.title("📊 FinAudit AI")
-    st.caption("AI-assisted financial audit support. Every result needs review by a qualified auditor.")
-    settings = get_settings()
-
-    with get_session() as session:
-        companies = session.query(Company).count()
-        engagements = session.query(Engagement).count()
-        findings = session.query(Finding).count()
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Companies", companies)
-    c2.metric("Engagements", engagements)
-    c3.metric("Findings", findings)
-    c4.metric("Groq API key", "Found ✅" if settings.groq_api_key else "Missing ❌")
-
-    st.subheader("System check")
-    st.write(f"AI model in use: `{settings.groq_model}`")
-    if st.button("Test Groq connection"):
-        with st.spinner("Contacting Groq..."):
-            try:
-                reply = LLMService().ask("Reply with the single word: OK")
-                st.success(f"Connected. The AI replied: {reply[:60]}")
-                log_activity("groq_connection_test", "success")
-            except LLMError as err:
-                st.error(str(err))
-                log_activity("groq_connection_test", f"failed: {err}")
-
-    st.subheader("Recent activity")
-    with get_session() as session:
-        logs = session.query(AuditLog).order_by(AuditLog.id.desc()).limit(10).all()
-    if logs:
-        st.table([{"Time": l.timestamp.strftime("%Y-%m-%d %H:%M"), "Action": l.action} for l in logs])
-    else:
-        st.info("No activity yet.")
 
 
 def show_settings():
@@ -105,6 +67,8 @@ elif page == "Transaction Testing":
     show_transaction_testing()
 elif page == "Internal Control Assessment":
     show_internal_control()
+elif page == "Audit Risk Dashboard":
+    show_risk_dashboard()
 elif page == "AI Audit Assistant":
     show_ai_agents()
 elif page == "Settings":
