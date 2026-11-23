@@ -1,6 +1,7 @@
 import streamlit as st
 
 from services.company_service import create_company, delete_company, list_companies, update_company
+from ui.choices import choose
 from ui.flash import flash, show_flash
 from ui.identity import get_identity
 
@@ -37,7 +38,7 @@ def show_company_management():
         return
     st.subheader("Edit or delete")
     by_id = {c["id"]: c for c in companies}
-    company_id = st.selectbox("Company", list(by_id), format_func=lambda i: by_id[i]["name"])
+    company_id = choose("Company", {i: c["name"] for i, c in by_id.items()}, key="edit_company_pick")
     company = by_id[company_id]
 
     with st.form(f"edit_company_{company_id}"):
