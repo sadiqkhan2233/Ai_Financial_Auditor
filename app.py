@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import streamlit as st
 
+from config.settings import BASE_DIR
 from models.database import init_db
 from ui.ai_agents import show_ai_agents
 from ui.company_page import show_company_management
@@ -17,42 +18,55 @@ from ui.internal_control import show_internal_control
 from ui.reports_page import show_reports_page
 from ui.risk_dashboard import show_risk_dashboard
 from ui.settings_page import show_settings
+from ui.theme import apply_theme
 from ui.transaction_testing import show_transaction_testing
 from ui.upload_center import show_upload_center
 
 st.set_page_config(page_title="FinAudit AI", page_icon="📊", layout="wide")
 
-PAGES = [
-    "Dashboard", "Company Management", "Audit Engagements", "Document Upload Center",
-    "Financial Analysis", "Transaction Testing", "Internal Control Assessment",
-    "Audit Risk Dashboard", "AI Audit Assistant", "Audit Findings", "Reports & Downloads", "Settings",
-]
-
 
 @st.cache_resource
-def setup_database(version: str = "phase7b"):
+def setup_database(version: str = "ui1"):
     init_db()
     return True
 
 
-setup_database("phase7b")
-st.sidebar.title("FinAudit AI")
-page = st.sidebar.radio("Navigation", PAGES)
-st.sidebar.caption("Audit support tool. It does not replace a qualified auditor.")
-show_identity_sidebar()
+def _page(function, title, icon, default=False):
+    return st.Page(function, title=title, icon=f":material/{icon}:", default=default)
 
-ROUTES = {
-    "Dashboard": show_dashboard,
-    "Company Management": show_company_management,
-    "Audit Engagements": show_engagements,
-    "Document Upload Center": show_upload_center,
-    "Financial Analysis": show_financial_analysis,
-    "Transaction Testing": show_transaction_testing,
-    "Internal Control Assessment": show_internal_control,
-    "Audit Risk Dashboard": show_risk_dashboard,
-    "AI Audit Assistant": show_ai_agents,
-    "Audit Findings": show_findings_page,
-    "Reports & Downloads": show_reports_page,
-    "Settings": show_settings,
-}
-ROUTES[page]()
+
+setup_database("ui1")
+apply_theme()
+
+logo = BASE_DIR / "assets" / "logo.svg"
+if logo.exists():
+    st.logo(str(logo), size="large")
+
+navigation = st.navigation({
+    "Overview": [
+        _page(show_dashboard, "Dashboard", "dashboard", default=True),
+    ],
+    "Set up": [
+        _page(show_company_management, "Company Management", "apartment"),
+        _page(show_engagements, "Audit Engagements", "folder_open"),
+        _page(show_upload_center, "Document Upload Center", "upload_file"),
+    ],
+    "Analysis": [
+        _page(show_financial_analysis, "Financial Analysis", "monitoring"),
+        _page(show_transaction_testing, "Transaction Testing", "manage_search"),
+        _page(show_internal_control, "Internal Control Assessment", "shield"),
+        _page(show_risk_dashboard, "Audit Risk Dashboard", "warning"),
+        _page(show_ai_agents, "AI Audit Assistant", "smart_toy"),
+    ],
+    "Review and reporting": [
+        _page(show_findings_page, "Audit Findings", "fact_check"),
+        _page(show_reports_page, "Reports & Downloads", "description"),
+    ],
+    "Administration": [
+        _page(show_settings, "Settings", "settings"),
+    ],
+})
+
+show_identity_sidebar()
+st.sidebar.caption("Audit support tool. It does not replace a qualified auditor.")
+navigation.run()
