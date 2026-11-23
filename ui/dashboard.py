@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import plotly.express as px
 import streamlit as st
 
@@ -7,10 +9,14 @@ from models.database import (
 )
 from services.data_access import list_engagements
 from services.engagement_summary import summarize_engagement
+from services.findings_service import findings_summary
 from services.llm_service import LLMError, LLMService
 from services.ratio_engine import calculate_ratios, format_value, monthly_trend
+from services.report_service import list_reports
+from services.results_store import load_agent_results
 from ui.agent_state import current_answers
 from ui.common import pick_engagement
+from ui.theme import hero, stepper
 
 LEVEL_ICONS = {"Low": "🟢", "Medium": "🟡", "High": "🔴", "Not assessed": "⚪"}
 SEVERITY_COLORS = {"High": "#c62828", "Medium": "#f9a825", "Low": "#1565c0"}
@@ -20,10 +26,35 @@ def _money(value) -> str:
     return f"PKR {value:,.0f}"
 
 
+def _progress(engagement_id, summary) -> list:
+    findings = findings_summary(engagement_id)
+    reports = list_reports(engagement_id)
+    has_data = not summary["tb"].empty or not summary["ledger"].empty
+    exceptions = summary["exceptions"]
+    tests_saved = findings["total"] > 0 or (exceptions is not None and len(exceptions) == 0)
+    reviewed = findings["total"] > 0 and findings["counts"]["Pending Review"] == 0
+    return [
+        ("Data uploaded", has_data),
+        ("Tests run and saved", tests_saved),
+        ("Findings reviewed", reviewed),
+        ("AI analysis run", bool(load_agent_results(engagement_id))),
+        ("Report submitted", bool(reports)),
+        ("Report approved", any(r["status"] == "Approved" for r in reports)),
+    ]
+
+
 def show_dashboard():
-    st.title("📊 FinAudit AI")
-    st.caption("AI-assisted financial audit support. Every result needs review by a qualified auditor.")
     settings = get_settings()
+    username = st.session_state.get("user_name", "")
+    hero(
+        f"Welcome{', ' + username if username else ''}",
+        "AI-assisted financial audit and internal control support for Pakistani businesses, SMEs and audit teams.",
+        chips=[
+            ("AI connected" if settings.groq_api_key else "AI key missing", "ok" if settings.groq_api_key else "bad"),
+            (settings.groq_model, "info"),
+            ("Demo storage", "warn"),
+        ],
+    )
 
     with get_session() as session:
         counts = (
@@ -31,18 +62,24 @@ def show_dashboard():
             session.query(Document).count(),
             session.query(Finding).filter(Finding.review_status == "Pending Review").count(),
         )
-    cols = st.columns(5)
+    cols = st.columns(4)
     cols[0].metric("Companies", counts[0])
     cols[1].metric("Engagements", counts[1])
     cols[2].metric("Documents", counts[2])
     cols[3].metric("Findings to review", counts[3])
-    cols[4].metric("Groq API key", "Found ✅" if settings.groq_api_key else "Missing ❌")
 
-    if list_engagements():
-        st.subheader("Engagement snapshot")
+    st.subheader("Engagement overview")
+    if not list_engagements():
+        st.info("No engagement yet. Start with Company Management, then Audit Engagements, then upload "
+                "a file in the Document Upload Center (or use the built-in sample data).")
+    else:
         engagement_id = pick_engagement()
         summary = summarize_engagement(engagement_id, current_answers(engagement_id))
         statements, exceptions, risk = summary["statements"], summary["exceptions"], summary["risk"]
+
+        steps = _progress(engagement_id, summary)
+        stepper(steps)
+        st.caption(f"{sum(1 for _, done in steps if done)} of {len(steps)} steps complete")
 
         snap = st.columns(5)
         snap[0].metric("Revenue", _money(statements["revenue"]) if statements else "n/a")
@@ -68,8 +105,17 @@ def show_dashboard():
                 st.plotly_chart(px.bar(data, x="Severity", y="Exceptions", color="Severity",
                                        color_discrete_map=SEVERITY_COLORS, title="Exceptions by severity"))
         st.caption("See the Audit Risk Dashboard page for how the risk level is worked out.")
+
+    st.subheader("Recent activity")
+    with get_session() as session:
+        logs = session.query(AuditLog).order_by(AuditLog.id.desc()).limit(8).all()
+    if logs:
+        st.dataframe([
+            {"Time (PKT)": (l.timestamp + timedelta(hours=5)).strftime("%Y-%m-%d %H:%M"),
+             "User": l.username, "Action": l.action} for l in logs
+        ], hide_index=True)
     else:
-        st.info("No engagement yet. Go to the Document Upload Center to upload a file or use the built-in sample.")
+        st.info("No activity yet.")
 
     with st.expander("System check"):
         st.write(f"AI model in use: `{settings.groq_model}`")
@@ -78,15 +124,7 @@ def show_dashboard():
                 try:
                     reply = LLMService().ask("Reply with the single word: OK")
                     st.success(f"Connected. The AI replied: {reply[:60]}")
-                    log_activity("groq_connection_test", "success")
+                    log_activity("groq_connection_test", "success", username=username or "system")
                 except LLMError as err:
                     st.error(str(err))
-                    log_activity("groq_connection_test", f"failed: {err}")
-
-    st.subheader("Recent activity")
-    with get_session() as session:
-        logs = session.query(AuditLog).order_by(AuditLog.id.desc()).limit(10).all()
-    if logs:
-        st.table([{"Time": l.timestamp.strftime("%Y-%m-%d %H:%M"), "Action": l.action} for l in logs])
-    else:
-        st.info("No activity yet.")
+                    log_activity("groq_connection_test", f"failed: {err}", username=username or "system")
