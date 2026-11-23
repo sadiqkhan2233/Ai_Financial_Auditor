@@ -12,6 +12,7 @@ from services.report_service import (
 )
 from services.user_service import can_finalize
 from ui.agent_state import current_answers
+from ui.choices import choose
 from ui.common import pick_engagement
 from ui.flash import flash, show_flash
 from ui.identity import get_identity
@@ -80,8 +81,8 @@ def _reports_tab(engagement_id, username, role):
     ], hide_index=True)
 
     by_id = {r["id"]: r for r in reports}
-    report_id = st.selectbox("Report", list(by_id),
-                             format_func=lambda i: f"Version {by_id[i]['version']} - {by_id[i]['status']}")
+    report_id = choose("Report", {i: f"Version {r['version']} - {r['status']}" for i, r in by_id.items()},
+                       key=f"report_pick_{engagement_id}")
     report = get_report(report_id)
     status = report["status"]
     if status == "Approved":
