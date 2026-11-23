@@ -6,6 +6,7 @@ from services.company_service import list_companies
 from services.engagement_manager import (
     STATUSES, create_engagement, delete_engagement, list_engagements_detailed, update_engagement,
 )
+from ui.choices import choose
 from ui.flash import flash, show_flash
 from ui.identity import get_identity
 
@@ -20,17 +21,18 @@ def show_engagements():
     if rows:
         st.dataframe([
             {"ID": r["id"], "Company": r["company"], "Engagement": r["title"], "Status": r["status"],
-             "From": r["period_start"], "To": r["period_end"], "Documents": r["documents"],
-             "Findings": r["findings"], "Awaiting review": r["pending"]} for r in rows
+             "From": str(r["period_start"] or ""), "To": str(r["period_end"] or ""),
+             "Documents": r["documents"], "Findings": r["findings"], "Awaiting review": r["pending"]}
+            for r in rows
         ], hide_index=True)
 
     with st.expander("Create an engagement", expanded=not rows):
         if not companies:
             st.info("Add a company first on the Company Management page.")
         else:
-            by_id = {c["id"]: c["name"] for c in companies}
             with st.form("create_engagement"):
-                company_id = st.selectbox("Company", list(by_id), format_func=lambda i: by_id[i])
+                company_id = choose("Company", {c["id"]: c["name"] for c in companies},
+                                    key="new_engagement_company")
                 title = st.text_input("Engagement title", value="Audit FY 2025-26")
                 c1, c2 = st.columns(2)
                 start = c1.date_input("Period start", value=date(2025, 7, 1))
@@ -50,8 +52,8 @@ def show_engagements():
         return
     st.subheader("Edit or delete")
     by_id = {r["id"]: r for r in rows}
-    engagement_id = st.selectbox("Engagement", list(by_id),
-                                 format_func=lambda i: f"{by_id[i]['company']} | {by_id[i]['title']}")
+    engagement_id = choose("Engagement", {i: f"{r['company']} | {r['title']}" for i, r in by_id.items()},
+                           key="edit_engagement_pick")
     row = by_id[engagement_id]
 
     with st.form(f"edit_engagement_{engagement_id}"):
